@@ -32,8 +32,11 @@
 		<springdata.mongodb>1.7.0.BUILD-SNAPSHOT</springdata.mongodb>
 		<springdata.neo4j>3.3.0.BUILD-SNAPSHOT</springdata.neo4j>
 		<springdata.gemfire>1.6.0.BUILD-SNAPSHOT</springdata.gemfire>
+		<springdata.cassandra>1.1.1.RELEASE</springdata.cassandra>
 
 		<hibernate.version>4.3.5.Final</hibernate.version>
+
+		<cassandraunit.version>2.0.2.2</cassandraunit.version>
 
 		<bundlor.enabled>false</bundlor.enabled>
 	</properties>
@@ -106,6 +109,13 @@
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-gemfire</artifactId>
 			<version>${springdata.gemfire}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-cassandra</artifactId>
+			<version>${springdata.cassandra}</version>
 			<scope>test</scope>
 		</dependency>
 
