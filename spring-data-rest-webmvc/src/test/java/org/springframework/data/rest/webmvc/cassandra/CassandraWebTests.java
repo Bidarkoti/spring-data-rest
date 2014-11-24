@@ -18,22 +18,17 @@ package org.springframework.data.rest.webmvc.cassandra;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.thrift.transport.TTransportException;
-import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.AbstractWebIntegrationTests;
 import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Integration tests for Cassandra repositories
