@@ -8,9 +8,14 @@ import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.thrift.transport.TTransportException;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.BeforeClass;
-import org.springframework.data.rest.webmvc.AbstractWebIntegrationTests;
+import org.springframework.data.rest.webmvc.CommonWebTests;
 
-public abstract class AbstractCassandraIntegrationTest extends AbstractWebIntegrationTests {
+/**
+ * Base class for testing with an embedded cassandra database
+ *
+ * @author Greg Turnquist
+ */
+public abstract class AbstractCassandraIntegrationTest extends CommonWebTests {
 
 	/**
 	 * The session connected to the system keyspace.

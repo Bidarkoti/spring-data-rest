@@ -11,6 +11,11 @@ import org.springframework.data.cassandra.config.SchemaAction;
 import org.springframework.data.cassandra.config.java.AbstractCassandraConfiguration;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
+/**
+ * Basic configuration for a Cassandra set up.
+ *
+ * @author Greg Turnquist
+ */
 @Configuration
 @EnableCassandraRepositories
 public class CassandraRepoConfig extends AbstractCassandraConfiguration {

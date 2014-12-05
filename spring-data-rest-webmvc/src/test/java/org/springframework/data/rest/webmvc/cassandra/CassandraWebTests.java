@@ -15,6 +15,10 @@
  */
 package org.springframework.data.rest.webmvc.cassandra;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -23,6 +27,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.cassandra.core.CassandraOperations;
 import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -46,18 +51,13 @@ public class CassandraWebTests extends AbstractCassandraIntegrationTest {
 	}
 
 	@Before
-	public void initDatabase() throws ConfigurationException, IOException, TTransportException, InterruptedException {
+	public void cleanoutDatabase() throws ConfigurationException, IOException, TTransportException, InterruptedException {
 
-		Employee employee = new Employee();
-		employee.setId("123");
-		employee.setFirstName("Frodo");
-		employee.setLastName("Baggins");
-		employee.setTitle("ring bearer");
-		repository.save(employee);
+		repository.deleteAll();
 	}
 
 	@Test
-	public void simpleTest() throws Exception {
+	public void postAndGet() throws Exception {
 
 		Link employeeLink = client.discoverUnique("employees");
 		ObjectMapper mapper = new ObjectMapper();
@@ -74,4 +74,33 @@ public class CassandraWebTests extends AbstractCassandraIntegrationTest {
 		assertJsonPathEquals("$.lastName", "Baggins", response);
 		assertJsonPathEquals("$.title", "burgler", response);
 	}
+
+	@Test
+	public void employeeSearch() throws Exception {
+
+
+		Employee employee1 = new Employee();
+		employee1.setId("123");
+		employee1.setFirstName("Frodo");
+		employee1.setLastName("Baggins");
+		employee1.setTitle("ring bearer");
+		repository.save(employee1);
+
+		Employee employee2 = new Employee();
+		employee2.setId("789");
+		employee2.setFirstName("Samwise");
+		employee2.setLastName("Gamgee");
+		employee2.setTitle("ring bearer");
+		repository.save(employee2);
+
+		Link employeesLink = client.discoverUnique("employees");
+
+		String results = client.follow(employeesLink)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$._embedded.employees[*].firstName", hasItems("Samwise", "Frodo")))
+				.andExpect(jsonPath("$._embedded.employees[*].lastName", hasItems("Gamgee", "Baggins")))
+				.andExpect(jsonPath("$._embedded.employees[*].title", hasItems("ring bearer", "ring bearer")))
+				.andReturn().getResponse().getContentAsString();
+	}
+
 }
