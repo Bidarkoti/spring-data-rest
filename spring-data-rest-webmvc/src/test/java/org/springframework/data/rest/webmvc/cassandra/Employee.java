@@ -15,6 +15,7 @@
  */
 package org.springframework.data.rest.webmvc.cassandra;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.cassandra.mapping.PrimaryKey;
 import org.springframework.data.cassandra.mapping.Table;
 
@@ -24,6 +25,7 @@ import org.springframework.data.cassandra.mapping.Table;
  * @author Greg Turnquist
  */
 @Table
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Employee {
 
 	@PrimaryKey private String id;

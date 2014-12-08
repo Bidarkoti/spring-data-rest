@@ -16,7 +16,7 @@
 package org.springframework.data.rest.webmvc.cassandra;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.io.IOException;
@@ -27,7 +27,6 @@ import org.apache.thrift.transport.TTransportException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.cassandra.core.CassandraOperations;
 import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -57,7 +56,7 @@ public class CassandraWebTests extends AbstractCassandraIntegrationTest {
 	}
 
 	@Test
-	public void postAndGet() throws Exception {
+	public void create() throws Exception {
 
 		Link employeeLink = client.discoverUnique("employees");
 		ObjectMapper mapper = new ObjectMapper();
@@ -76,8 +75,7 @@ public class CassandraWebTests extends AbstractCassandraIntegrationTest {
 	}
 
 	@Test
-	public void employeeSearch() throws Exception {
-
+	public void findAllEmployees() throws Exception {
 
 		Employee employee1 = new Employee();
 		employee1.setId("123");
@@ -95,12 +93,122 @@ public class CassandraWebTests extends AbstractCassandraIntegrationTest {
 
 		Link employeesLink = client.discoverUnique("employees");
 
-		String results = client.follow(employeesLink)
+		client.follow(employeesLink)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$._embedded.employees[*].firstName", hasItems("Samwise", "Frodo")))
 				.andExpect(jsonPath("$._embedded.employees[*].lastName", hasItems("Gamgee", "Baggins")))
-				.andExpect(jsonPath("$._embedded.employees[*].title", hasItems("ring bearer", "ring bearer")))
-				.andReturn().getResponse().getContentAsString();
+				.andExpect(jsonPath("$._embedded.employees[*].title", hasItems("ring bearer", "ring bearer")));
+	}
+
+	@Test
+	public void createAnEmployee() throws Exception {
+
+		Employee employee = new Employee();
+		employee.setId("123");
+		employee.setFirstName("Frodo");
+		employee.setLastName("Baggins");
+		employee.setTitle("ring bearer");
+		ObjectMapper mapper = new ObjectMapper();
+		String employeeString = mapper.writeValueAsString(employee);
+
+		Link employeeLink = client.discoverUnique("employees");
+
+		MockHttpServletResponse response = postAndGet(employeeLink, employeeString, MediaType.APPLICATION_JSON);
+
+		Link newlyMintedEmployeeLink = client.assertHasLinkWithRel("self", response);
+		Employee newlyMintedEmployee = mapper.readValue(response.getContentAsString(), Employee.class);
+
+		assertThat(newlyMintedEmployee.getFirstName(), equalTo(employee.getFirstName()));
+		assertThat(newlyMintedEmployee.getLastName(), equalTo(employee.getLastName()));
+		assertThat(newlyMintedEmployee.getTitle(), equalTo(employee.getTitle()));
+
+		MockHttpServletResponse response2 = patchAndGet(
+				newlyMintedEmployeeLink, "{\"firstName\": \"Bilbo\"}", MediaType.APPLICATION_JSON);
+
+		Link refurbishedEmployeeLink = client.assertHasLinkWithRel("self", response2);
+		Employee refurbishedEmployee = mapper.readValue(response2.getContentAsString(), Employee.class);
+
+		assertThat(refurbishedEmployee.getFirstName(), equalTo("Bilbo"));
+		assertThat(refurbishedEmployee.getLastName(), equalTo(employee.getLastName()));
+		assertThat(refurbishedEmployee.getTitle(), equalTo(employee.getTitle()));
+
+		MockHttpServletResponse response3 = putAndGet(
+				refurbishedEmployeeLink, "{\"lastName\": \"Jr.\"}", MediaType.APPLICATION_JSON);
+
+		System.out.println(response3.getContentAsString());
+
+		Employee lastEmployee = mapper.readValue(response3.getContentAsString(), Employee.class);
+
+		assertThat(lastEmployee.getFirstName(), equalTo("Bilbo"));
+		assertThat(lastEmployee.getLastName(), equalTo("Jr."));
+		assertThat(lastEmployee.getTitle(), equalTo(employee.getTitle()));
+	}
+
+	@Test
+	public void createThenPatch() throws Exception {
+
+		Employee employee = new Employee();
+		employee.setId("123");
+		employee.setFirstName("Frodo");
+		employee.setLastName("Baggins");
+		employee.setTitle("ring bearer");
+		ObjectMapper mapper = new ObjectMapper();
+		String employeeString = mapper.writeValueAsString(employee);
+
+		Link employeeLink = client.discoverUnique("employees");
+
+		MockHttpServletResponse response = postAndGet(employeeLink, employeeString, MediaType.APPLICATION_JSON);
+
+		Link newlyMintedEmployeeLink = client.assertHasLinkWithRel("self", response);
+		Employee newlyMintedEmployee = mapper.readValue(response.getContentAsString(), Employee.class);
+
+		assertThat(newlyMintedEmployee.getFirstName(), equalTo(employee.getFirstName()));
+		assertThat(newlyMintedEmployee.getLastName(), equalTo(employee.getLastName()));
+		assertThat(newlyMintedEmployee.getTitle(), equalTo(employee.getTitle()));
+
+		MockHttpServletResponse response2 = patchAndGet(
+				newlyMintedEmployeeLink, "{\"firstName\": \"Bilbo\"}", MediaType.APPLICATION_JSON);
+
+		Employee refurbishedEmployee = mapper.readValue(response2.getContentAsString(), Employee.class);
+
+		assertThat(refurbishedEmployee.getFirstName(), equalTo("Bilbo"));
+		assertThat(refurbishedEmployee.getLastName(), equalTo(employee.getLastName()));
+		assertThat(refurbishedEmployee.getTitle(), equalTo(employee.getTitle()));
+	}
+
+	@Test
+	public void createThenPut() throws Exception {
+
+		Employee employee = new Employee();
+		employee.setId("123");
+		employee.setFirstName("Frodo");
+		employee.setLastName("Baggins");
+		employee.setTitle("ring bearer");
+		ObjectMapper mapper = new ObjectMapper();
+		String employeeString = mapper.writeValueAsString(employee);
+
+		Link employeeLink = client.discoverUnique("employees");
+
+		MockHttpServletResponse response = postAndGet(employeeLink, employeeString, MediaType.APPLICATION_JSON);
+
+		Link newlyMintedEmployeeLink = client.assertHasLinkWithRel("self", response);
+
+		System.out.println("1) What is in the database?");
+		System.out.println(response.getContentAsString());
+
+		System.out.println("PUT'ing to " + newlyMintedEmployeeLink);
+
+		MockHttpServletResponse response2 = putAndGet(
+				newlyMintedEmployeeLink, "{\"firstName\": \"Bilbo\"}", MediaType.APPLICATION_JSON);
+
+		System.out.println("2) What is in the database?");
+		System.out.println(response2.getContentAsString());
+
+		Employee refurbishedEmployee = mapper.readValue(response2.getContentAsString(), Employee.class);
+
+		assertThat(refurbishedEmployee.getFirstName(), equalTo("Bilbo"));
+		assertThat(refurbishedEmployee.getLastName(), nullValue());
+		assertThat(refurbishedEmployee.getTitle(), nullValue());
 	}
 
 }
